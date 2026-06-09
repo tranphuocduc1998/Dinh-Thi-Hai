@@ -1,65 +1,59 @@
-import Image from "next/image";
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-export default function Home() {
+export default function HomePage() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <main className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6">
+      <div className="max-w-3xl w-full text-center space-y-8">
+        <div className="space-y-3">
+          <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl">
+            Hệ Thống Tư Vấn Hướng Nghiệp Lai Thông Minh
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+            Khám phá bản thân và định hướng tương lai thông qua quy trình xử lý 3 tầng: 
+            Tính cách &gt;&gt; Nhóm ngành &gt;&gt; Điểm số xét tuyển đại học.
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        {/* Khối giới thiệu 3 tầng gối đầu */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
+          <Card className="border-l-4 border-l-blue-500 shadow-sm">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base text-blue-600 font-bold">Tầng 1: Holland Test</CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm text-slate-600">
+              Khảo sát sở thích với 30 câu hỏi chuẩn hóa giúp định hình mã tính cách trội (RIASEC) của bản thân.
+            </CardContent>
+          </Card>
+
+          <Card className="border-l-4 border-l-emerald-500 shadow-sm">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base text-emerald-600 font-bold">Tầng 2: Bộ lọc Tri thức</CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm text-slate-600">
+              Hệ chuyên gia (Knowledge-based) tự động ánh xạ tính cách sang nhóm ngành và sàng lọc theo học phí, khu vực.
+            </CardContent>
+          </Card>
+
+          <Card className="border-l-4 border-l-orange-500 shadow-sm">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base text-orange-600 font-bold">Tầng 3: Xếp hạng Năng lực</CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm text-slate-600">
+              Thuật toán xếp hạng (Content-based) đối chiếu kết quả thi/học bạ để đưa ra Top 3 ngành nghề phù hợp nhất.
+            </CardContent>
+          </Card>
         </div>
-      </main>
-    </div>
+
+        <div className="pt-4">
+          <Link href="/holland-test">
+            <Button size="lg" className="px-8 py-6 text-lg font-bold bg-blue-600 hover:bg-blue-700 transition-all rounded-xl shadow-md">
+              Bắt đầu khám phá bản thân &raquo;
+            </Button>
+          </Link>
+        </div>
+      </div>
+    </main>
   );
 }
