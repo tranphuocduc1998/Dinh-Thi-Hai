@@ -1,7 +1,7 @@
 'use client';
 
 import { clip, GeoFilter, processKnowledgeBasedFilter } from "@/lib/coreEngineHandle";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from 'react';
 import {
     Command,
@@ -24,14 +24,12 @@ import { Check, ChevronDown } from "lucide-react";
 import { cn, getMajorResult } from "@/lib/utils";
 import { universitiesData } from "@/data/University";
 
-import { getIndustriesWithScore } from '@/lib/utils';
 import { subjectCombinationsData } from "@/data/SubjectCombination";
 import { admissions } from "@/data/Admission";
 import { majorData } from "@/data/Major";
 import { SubjectData } from "@/data/Subject";
 
 export default function HollandTestPage() {
-    const searchParams = useSearchParams();
     const router = useRouter();
     const [topCode, setTopCode] = useState<string>("");
     const [rawScores, setRawScores] = useState<Record<string, number>>({ R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 });

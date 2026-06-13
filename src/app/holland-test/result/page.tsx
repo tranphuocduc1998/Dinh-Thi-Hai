@@ -5,7 +5,6 @@ import { HOLLAND_RESULTS_MAP } from '@/data/hollandResults';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { RIASE_RESULT } from '@/data/RIASEC';
 import { useEffect, useState } from 'react';
 import { getIndustriesWithScore } from '@/lib/utils';
 
@@ -14,7 +13,6 @@ const MAX_SCORE_PER_GROUP = QUESTIONS_PER_GROUP * 5;  // = 35
 // vì weight max = 2 nên scale tăng nhẹ (không bắt buộc dùng)
 
 export default function HollandResultPage() {
-  const searchParams = useSearchParams();
   const router = useRouter();
   const [expanded, setExpanded] = useState(false);
 
