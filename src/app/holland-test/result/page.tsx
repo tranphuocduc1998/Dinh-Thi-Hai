@@ -5,73 +5,154 @@ import { HOLLAND_RESULTS_MAP } from '@/data/hollandResults';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
+import { RIASE_RESULT } from '@/data/RIASEC';
+import { useEffect, useState } from 'react';
+import { getIndustriesWithScore } from '@/lib/utils';
+
+const QUESTIONS_PER_GROUP = 7;   // kiểm tra lại đúng với data của bạn
+const MAX_SCORE_PER_GROUP = QUESTIONS_PER_GROUP * 5;  // = 35
+// vì weight max = 2 nên scale tăng nhẹ (không bắt buộc dùng)
 
 export default function HollandResultPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const [expanded, setExpanded] = useState(false);
 
-  // Đọc dữ liệu thô từ URL
-  const topGroup = searchParams.get('topGroup') || 'R';
-  const rawScores = searchParams.get('scores');
-  
-  // Phân tích ma trận điểm đã tính
-  let scores: Record<string, number> = { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 };
-  if (rawScores) {
-    try {
-      scores = JSON.parse(decodeURIComponent(rawScores));
-    } catch (e) {
-      console.error('Lỗi định dạng ma trận điểm:', e);
-    }
-  }
+  // =========================
+  // 1. Đọc dữ liệu
+  // =========================
+  const [topCode, setTopCode] = useState<string>("");
+  const [scores, setScores] = useState<Record<string, number>>({ R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 });
+  const [coreScores, setCoreScores] = useState<Record<string, number>>({ R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 });
+  const [rank, setRank] = useState<[string, number][]>([]);
 
-  // Lấy thông tin chi tiết giải thích từ sơ đồ ánh xạ
-  const currentResult = HOLLAND_RESULTS_MAP[topGroup] || HOLLAND_RESULTS_MAP['R'];
+  // Trong result page:
+  useEffect(() => {
+    const stored = sessionStorage.getItem('hollandResult');
+    if (!stored) { router.push('/holland-test'); return; }
+    const data = JSON.parse(stored);
+    setTopCode(data.topCode);
+    setScores(data.rawScores);
+    setCoreScores(data.coreScores);
+    setRank(data.rank);
+  }, []);
 
-  // Điểm tối đa của 1 nhóm câu hỏi là 35 (7 câu * 5 điểm)
-  const MAX_SCORE_PER_GROUP = 35;
+  // =========================
+  // 2. RENDER TOP GROUP (FIRST CODE)
+  // =========================
+  const topGroup = topCode[0];
+  const currentResult = HOLLAND_RESULTS_MAP[topGroup];
+
+  // =========================
+  // CAREER MATCHING ENGINE
+  // =========================
+  const industriesWithScore = getIndustriesWithScore(topCode);
+
+  const visibleIndustries = expanded
+    ? industriesWithScore
+    : industriesWithScore.slice(0, 6);
+
+  // // group by cluster
+  // const grouped = industriesWithScore.reduce((acc: any, item) => {
+  //   const key = 'other';
+  //   if (!acc[key]) acc[key] = [];
+  //   acc[key].push(item);
+  //   return acc;
+  // }, {});
 
   return (
     <main className="min-h-screen bg-slate-50 py-10 px-4 flex flex-col items-center">
       <div className="max-w-3xl w-full space-y-6">
-        
-        {/* Khối lời chào và Kết luận nhóm trội */}
+
+        {/* =========================
+            HERO RESULT
+        ========================= */}
         <Card className="border-t-8 border-t-blue-600 shadow-md">
           <CardHeader className="text-center">
-            <CardDescription className="text-sm uppercase tracking-wider font-semibold text-blue-600">Kết quả phân tích Tầng 1</CardDescription>
+            <CardDescription className="text-sm uppercase tracking-wider font-semibold text-blue-600">
+              Kết quả phân tích Holland nâng cao
+            </CardDescription>
+
             <CardTitle className="text-3xl font-extrabold text-slate-900 mt-1">
-              Mã Tính Cách Trội: {topGroup} — {currentResult.vietnameseName}
+              🧬 Mã tính cách của bạn: {topCode}
             </CardTitle>
+
+            <p className="text-sm text-slate-500 mt-2">
+              Nhóm trội nhất: <b>{topGroup} - {currentResult?.vietnameseName}</b>
+            </p>
           </CardHeader>
-          <CardContent className="text-slate-700 bg-slate-50/50 p-6 rounded-b-xl border-t text-center sm:text-left">
-            <p className="font-bold text-slate-800 mb-2">🧬 Đặc trưng tính cách nổi bật:</p>
-            <p className="leading-relaxed text-slate-600">{currentResult.description}</p>
+        </Card>
+
+        {/* =========================
+            TOP 3 CODE BREAKDOWN
+        ========================= */}
+        <Card>
+          <CardHeader>
+            <CardTitle>🥇 Top 3 nhóm tính cách</CardTitle>
+            <CardDescription>Mã RIASEC theo điểm tổng + core score tie-break</CardDescription>
+          </CardHeader>
+
+          <CardContent className="flex gap-3 flex-wrap">
+            {topCode.split('').map((g, idx) => {
+              const info = HOLLAND_RESULTS_MAP[g];
+              return (
+                <div
+                  key={g}
+                  className="px-4 py-2 rounded-lg bg-blue-50 border text-blue-700 font-bold"
+                >
+                  #{idx + 1} {g} - {info?.vietnameseName}
+                </div>
+              );
+            })}
+            {topCode.split('').map((g, idx) => {
+              const info = HOLLAND_RESULTS_MAP[g];
+              return (
+                <div key={g} className="border-l-4 border-blue-400 pl-4 py-2">
+                  <p className="font-bold text-slate-800">
+                    #{idx + 1} {g} — {info?.vietnameseName}
+                  </p>
+                  <p className="text-sm text-slate-600 mt-1">{info?.description}</p>
+                </div>
+              );
+            })}
           </CardContent>
         </Card>
 
-        {/* Khối hiển thị trực quan Ma trận điểm RIASEC */}
-        <Card className="shadow-sm">
+        {/* =========================
+            SCORE MATRIX
+        ========================= */}
+        <Card>
           <CardHeader>
-            <CardTitle className="text-xl font-bold text-slate-800">📊 Ma Trận Phân Bố Điểm RIASEC</CardTitle>
-            <CardDescription>Điểm số chi tiết tích lũy được qua 42 câu hỏi (Tối đa 35 điểm/nhóm)</CardDescription>
+            <CardTitle>📊 Ma trận điểm chi tiết</CardTitle>
+            <CardDescription>Weighted score + core insight</CardDescription>
           </CardHeader>
+
           <CardContent className="space-y-4">
-            {Object.entries(scores).map(([group, score]) => {
+            {rank.map(([group, value]) => {
               const info = HOLLAND_RESULTS_MAP[group];
-              const percentage = (score / MAX_SCORE_PER_GROUP) * 100;
+              const percentage = (value / MAX_SCORE_PER_GROUP) * 100;
               const isTop = group === topGroup;
 
               return (
                 <div key={group} className="space-y-1.5">
-                  <div className="flex justify-between items-center text-sm">
-                    <span className={`font-semibold ${isTop ? 'text-blue-600 font-bold' : 'text-slate-700'}`}>
-                      {group} - {info?.vietnameseName} {isTop && '⭐ (Trội nhất)'}
+                  <div className="flex justify-between text-sm">
+                    <span className={`font-semibold ${isTop ? 'text-blue-600' : 'text-slate-700'}`}>
+                      {group} - {info?.vietnameseName}
                     </span>
-                    <span className="font-mono font-bold text-slate-600">{score} / {MAX_SCORE_PER_GROUP} đ</span>
+
+                    <span className="font-mono text-slate-600">
+                      {value.toFixed(0)} điểm
+                    </span>
                   </div>
-                  <Progress 
-                    value={percentage} 
-                    className={`h-3 rounded-full bg-slate-100 ${isTop ? '[&>div]:bg-blue-600' : '[&>div]:bg-slate-400'}`} 
+
+                  <Progress
+                    value={percentage}
+                    className={`h-3 ${isTop ? '[&>div]:bg-blue-600' : '[&>div]:bg-slate-400'}`}
                   />
+
+                  <div className="text-xs text-slate-500">
+                    Core score: {coreScores[group] || 0}
+                  </div>
                 </div>
               );
             })}
@@ -86,29 +167,46 @@ export default function HollandResultPage() {
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
-              {currentResult.careers.map((career, i) => (
-                <span 
-                  key={i} 
+              {visibleIndustries.map((i) => (
+                <span
+                  key={i.code}
                   className="px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-100 font-medium text-sm rounded-lg shadow-200"
                 >
-                  {career}
+                  {i.name} ({i.code} - {i.matchPercent.toFixed(0)}%)
                 </span>
               ))}
             </div>
+            {/* BUTTON EXPAND / COLLAPSE */}
+            {industriesWithScore.length > 6 && (
+              <div className="mt-4 text-center">
+                <button
+                  onClick={() => setExpanded(!expanded)}
+                  className="text-sm font-semibold text-blue-600 hover:text-blue-800 transition"
+                >
+                  {expanded ? 'Thu gọn ▲' : 'Xem thêm ▼'}
+                </button>
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        {/* Nút hành động chuyển hướng kết nối sang Tầng 2 */}
+        {/* =========================
+            NEXT STEP
+        ========================= */}
         <div className="bg-blue-900 text-white p-6 rounded-2xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+
           <div className="space-y-1 text-center sm:text-left">
-            <h4 className="text-lg font-bold">Sẵn sàng bước vào Tầng 2?</h4>
-            <p className="text-xs text-blue-200">Hệ chuyên gia (Knowledge-based) đang đợi để lọc cụ thể trường đại học và học phí theo mã {topGroup} của bạn.</p>
+            <h4 className="text-lg font-bold">Bước tiếp theo</h4>
+            <p className="text-xs text-blue-200">
+              Hệ thống sẽ lọc ngành học phù hợp theo mã {topCode}
+            </p>
           </div>
-          <Button 
-            onClick={() => router.push(`/knowledge-filter?riasec=${topGroup}`)}
-            className="w-full sm:w-auto bg-white text-blue-900 hover:bg-blue-50 font-bold py-5 px-6 rounded-xl transition-all whitespace-nowrap"
+
+          <Button
+            onClick={() => router.push(`/knowledge-filter?riasec=${topCode}`)}
+            className="w-full sm:w-auto bg-white text-blue-900 hover:bg-blue-50 font-bold py-5 px-6 rounded-xl"
           >
-            Tiến hành lọc Ngành Đại học &raquo;
+            Lọc ngành phù hợp »
           </Button>
         </div>
 

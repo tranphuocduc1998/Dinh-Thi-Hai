@@ -53,7 +53,8 @@ job-prediction-frontend/
 │   │   └── MajorGroupBox.tsx     # Hộp hiển thị nhóm ngành ở tầng 2
 │   │
 │   ├── data/                     # Chứa dữ liệu tĩnh cục bộ nếu cần
-│   │   └── hollandQuestions.ts   # Lưu 30 câu hỏi dạng JSON giống như bên Python
+│   │   ├── hollandQuestions.ts   # Lưu 30 câu hỏi dạng JSON giống như bên Python
+│   │   └── hollandResults.ts     # Lưu kết quả nhóm ngành theo test holland
 │   │
 │   └── services/                 # Nơi viết các hàm gọi API sang Backend Django
 │       └── api.ts                # Hàm gửi kết quả test, gửi điểm số sang Python

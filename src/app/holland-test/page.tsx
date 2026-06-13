@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 
 export default function HollandTestPage() {
   const router = useRouter();
-  
+
   // State lưu câu trả lời: dạng { [Q01]: 5, [Q02]: 3... } với giá trị điểm từ 1 -> 5
   const [answers, setAnswers] = useState<{ [key: string]: number }>({});
 
@@ -29,34 +29,59 @@ export default function HollandTestPage() {
     e.preventDefault();
 
     if (answeredCount < HOLLAND_QUESTIONS.length) {
-      alert(`Bạn mới hoàn thành ${answeredCount}/${HOLLAND_QUESTIONS.length} câu. Vui lòng trả lời đầy đủ tất cả các câu hỏi trước khi nộp bài!`);
+      alert(`Bạn mới hoàn thành ${answeredCount}/${HOLLAND_QUESTIONS.length} câu.`);
       return;
     }
 
-    // Khởi tạo bảng điểm tính toán cho 6 nhóm RIASEC
-    const scores = { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 };
+    // Bước 1: Tính Raw Score (tổng đơn thuần, không weight)
+    const rawScores: Record<string, number> = { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 };
+    // Bước 2: Tính Core Score (chỉ câu isCore, dùng tie-break)
+    const coreScores: Record<string, number> = { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 };
 
-    // Tích lũy điểm Likert (1 đến 5 điểm) trực tiếp vào từng nhóm ngành
     HOLLAND_QUESTIONS.forEach((q) => {
       const score = answers[q.id] || 0;
-      scores[q.category] += score;
+      rawScores[q.category] += score;          // Tất cả câu, không nhân weight
+      if (q.isCore) coreScores[q.category] += score;  // Chỉ câu core
     });
 
-    // Sắp xếp tìm nhóm có tổng điểm cao nhất
-    const sortedScores = Object.entries(scores).sort((a, b) => b[1] - a[1]);
-    const topGroup = sortedScores[0][0];
-    const topScore = sortedScores[0][1]; // Điểm tối đa lúc này là 7 câu * 5 điểm = 35 điểm/nhóm
+    // Bước 3: Xếp hạng với tie-break 2 cấp
+    const sorted = Object.entries(rawScores).sort((a, b) => {
+      const [gA, scoreA] = a;
+      const [gB, scoreB] = b;
 
-    const encodedScores = encodeURIComponent(JSON.stringify(scores));
-    
-    // Đẩy tiếp luồng dữ liệu đã tính toán sang trang kết quả
-    router.push(`/holland-test/result?topGroup=${topGroup}&topScore=${topScore}&scores=${encodedScores}`);
+      // Cấp 1: Raw score
+      if (scoreA !== scoreB) return scoreB - scoreA;
+
+      // Cấp 2: Core score (tie-breaker học thuật)
+      if (coreScores[gA] !== coreScores[gB]) {
+        return coreScores[gB] - coreScores[gA];
+      }
+
+      // Cấp 3: Vẫn bằng → giữ nguyên thứ tự (stable sort)
+      // Không dùng fixed order để tránh bias
+      return 0;
+    });
+
+    const top3 = sorted.slice(0, 3).map(([g]) => g);
+    const topCode = top3.join('');
+
+    const encodedRawScores = encodeURIComponent(JSON.stringify(rawScores));
+    const encodedCoreScores = encodeURIComponent(JSON.stringify(coreScores));
+    const encodedRank = encodeURIComponent(JSON.stringify(sorted));
+
+    sessionStorage.setItem('hollandResult', JSON.stringify({
+      topCode,
+      rawScores,
+      coreScores,
+      rank: sorted,
+    }));
+    router.push('/holland-test/result');
   };
 
   return (
     <main className="min-h-screen bg-slate-50 py-10 px-4 flex flex-col items-center">
       <div className="max-w-2xl w-full space-y-6">
-        
+
         {/* Thanh tiến độ làm bài thông minh */}
         <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 sticky top-4 z-10 space-y-2">
           <div className="flex justify-between items-center text-sm font-semibold text-slate-600">
@@ -92,8 +117,8 @@ export default function HollandTestPage() {
                     className="grid grid-cols-1 gap-2 sm:grid-cols-1"
                   >
                     {LIKERT_OPTIONS.map((opt) => (
-                      <div 
-                        key={opt.value} 
+                      <div
+                        key={opt.value}
                         className={`flex items-center space-x-3 p-2.5 rounded-lg border transition-all cursor-pointer hover:bg-slate-50 ${answers[q.id] === parseInt(opt.value, 10) ? 'border-blue-200 bg-blue-50/40' : 'border-slate-100'}`}
                       >
                         <RadioGroupItem value={opt.value} id={`opt-${q.id}-${opt.value}`} />
