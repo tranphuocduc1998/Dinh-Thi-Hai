@@ -1,14 +1,25 @@
+'use client';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useEffect, useState } from 'react';
+import { checkApiHealth } from '@/lib/api/advisor';
 
 export default function HomePage() {
+  const [status, setStatus] = useState('Đang kiểm tra...');
+
+    useEffect(() => {
+    checkApiHealth().then((ok) =>
+      setStatus(ok ? '✅ API kết nối thành công' : '❌ API không phản hồi')
+    );
+  }, []);
+
   return (
     <main className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6">
       <div className="max-w-3xl w-full text-center space-y-8">
         <div className="space-y-3">
           <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl">
-            Hệ Thống Tư Vấn Hướng Nghiệp Lai Thông Minh
+            Hệ Thống Tư Vấn Hướng Nghiệp Lai Thông Minh ({status})
           </h1>
           <p className="text-lg text-slate-600 max-w-2xl mx-auto">
             Khám phá bản thân và định hướng tương lai thông qua quy trình xử lý 3 tầng: 
